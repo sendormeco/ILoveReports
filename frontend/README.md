@@ -1,11 +1,23 @@
+# ILoveReports frontend
 
-  # AI Report Generator
+React / TypeScript frontend for ILoveReports.
 
-  This is a code bundle for AI Report Generator. The original project is available at https://www.figma.com/design/Q2uWX1K7gv9Zny0njYCS8T/AI-Report-Generator.
+The frontend is now split into:
 
-  ## Running the code
+- `src/domain/report.ts` - report data types;
+- `src/services/reportApi.ts` - HTTP requests to the backend;
+- `src/application/reportUseCases.ts` - frontend scenarios for generation and DOCX download;
+- `src/components/` - UI components.
 
-  Run `npm i` to install the dependencies.
+## Run
 
-  Run `npm run dev` to start the development server.
-  
+```bash
+npm install
+npm run dev
+```
+
+Backend URL is configured with:
+
+```env
+VITE_API_URL=http://127.0.0.1:8000
+```

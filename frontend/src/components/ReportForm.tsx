@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ReportData, GeneratedReport } from '../App';
+import type { ReportData, GeneratedReport } from '../domain/report';
 import { ChevronRight, ChevronLeft, Upload, Image, FileText, Sparkles, Palette, Download } from 'lucide-react';
 
 interface ReportFormProps {
-  onGenerate: (data: ReportData) => void;
+  onGenerate: (data: ReportData) => Promise<void>;
   reportHistory: GeneratedReport[];
   onSelectReport: (report: GeneratedReport) => void;
   onDownloadReport: (report: GeneratedReport) => void;

@@ -1,24 +1,18 @@
-import { GeneratedReport } from '../App';
+import type { GeneratedReport } from '../domain/report';
 import { Download, RotateCcw, FileText, Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
 
 interface ReportPreviewProps {
   report: GeneratedReport;
   onReset: () => void;
+  onDownload: (report: GeneratedReport) => Promise<void>;
 }
 
-export function ReportPreview({ report, onReset }: ReportPreviewProps) {
+export function ReportPreview({ report, onReset, onDownload }: ReportPreviewProps) {
   const [activeTab, setActiveTab] = useState<'preview' | 'screenshots'>('preview');
 
   const handleDownload = () => {
-    // Create a downloadable text file with the report
-    const element = document.createElement('a');
-    const file = new Blob([report.generatedContent], { type: 'text/markdown' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${report.titlePage.title || 'report'}.md`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    void onDownload(report);
   };
 
   return (
@@ -32,7 +26,7 @@ export function ReportPreview({ report, onReset }: ReportPreviewProps) {
           <div className="flex-1">
             <h3 className="text-green-900 mb-1">Отчёт успешно сгенерирован!</h3>
             <p className="text-green-700">
-              Ваш отчёт готов. Вы можете просмотреть его ниже или скачать в формате Markdown.
+              Ваш отчёт готов. Вы можете просмотреть его ниже или скачать в формате DOCX.
             </p>
           </div>
         </div>
@@ -189,8 +183,8 @@ export function ReportPreview({ report, onReset }: ReportPreviewProps) {
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
           <strong>Примечание:</strong> В реальной версии приложения отчёт будет сгенерирован с помощью
-          продвинутых ИИ-моделей, таких как GPT-4, которые создадут более детальный и профессиональный
-          контент на основе предоставленной информации.
+          локальных open-source LLM через Ollama. Это позволяет генерировать отчёты по локальным данным
+          без прямой зависимости бизнес-логики от конкретной модели.
         </p>
       </div>
     </div>

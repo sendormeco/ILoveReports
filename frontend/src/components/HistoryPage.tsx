@@ -1,4 +1,4 @@
-import { GeneratedReport } from '../App';
+import type { GeneratedReport } from '../domain/report';
 import { Download, FileText, Calendar } from 'lucide-react';
 
 interface HistoryPageProps {

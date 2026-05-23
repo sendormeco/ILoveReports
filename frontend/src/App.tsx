@@ -5,27 +5,8 @@ import { HistoryPage } from './components/HistoryPage';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
 import { FileText, History, FileStack, LogIn, UserPlus } from 'lucide-react';
-
-export interface ReportData {
-  workDescription: string;
-  workGoal: string;
-  conclusion: string;
-  tone: string;
-  screenshots: File[];
-  titlePage: {
-    title: string;
-    author: string;
-    organization: string;
-    date: string;
-    supervisor?: string;
-  };
-}
-
-export interface GeneratedReport extends ReportData {
-  id: string;
-  generatedContent: string;
-  generatedDate: string;
-}
+import type { GeneratedReport, ReportData } from './domain/report';
+import { downloadReportAsDocx, generateComprehensiveReport } from './application/reportUseCases';
 
 export default function App() {
   const [generatedReport, setGeneratedReport] = useState<GeneratedReport | null>(null);
@@ -37,48 +18,22 @@ export default function App() {
 
   const handleGenerateReport = async (data: ReportData) => {
     setIsGenerating(true);
-    setGenerationProgress(10); // старт прогресса
+    setGenerationProgress(10);
+
+    const progressInterval = window.setInterval(() => {
+      setGenerationProgress(prev => (prev < 80 ? prev + 5 : prev));
+    }, 500);
 
     try {
-      // шаг для UX: показать прогресс
-      const progressInterval = setInterval(() => {
-        setGenerationProgress(prev => (prev < 80 ? prev + 5 : prev));
-      }, 500);
-
-      const response = await fetch("http://127.0.0.1:8000/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          goal: data.workGoal,
-          process: data.workDescription,
-          results: "See report body", // backend пока не использует
-          conclusion: data.conclusion,
-        }),
-      });
-
-      clearInterval(progressInterval);
-
-      if (!response.ok) {
-        throw new Error(`Ошибка генерации: ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      const newReport = await generateComprehensiveReport(data);
       setGenerationProgress(100);
-
-      const newReport: GeneratedReport = {
-        ...data,
-        id: Date.now().toString(),
-        generatedContent: result.report,
-        generatedDate: new Date().toISOString(),
-      };
-
       setGeneratedReport(newReport);
       setReportHistory(prev => [newReport, ...prev]);
-
     } catch (err) {
       console.error(err);
-      alert("Ошибка генерации отчёта. Проверь backend.");
+      alert('Ошибка генерации отчёта. Проверьте backend, Ollama или переключите TEXT_GENERATOR=static.');
     } finally {
+      window.clearInterval(progressInterval);
       setIsGenerating(false);
       setGenerationProgress(0);
     }
@@ -91,33 +46,10 @@ export default function App() {
 
   const handleDownloadReport = async (report: GeneratedReport) => {
     try {
-      // Сохраняем как docx через backend
-      const response = await fetch("http://127.0.0.1:8000/generate-docx", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: report.titlePage.title,
-          report: report.generatedContent,
-          author: report.titlePage.author,
-          organization: report.titlePage.organization,
-          date: report.titlePage.date,
-          supervisor: report.titlePage.supervisor || "",
-        }),
-      });
-
-      if (!response.ok) throw new Error("Ошибка скачивания docx");
-
-      const blob = await response.blob();
-      const element = document.createElement('a');
-      element.href = URL.createObjectURL(blob);
-      element.download = `${report.titlePage.title || 'report'}.docx`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-
+      await downloadReportAsDocx(report);
     } catch (err) {
       console.error(err);
-      alert("Не удалось скачать отчёт.");
+      alert('Не удалось скачать отчёт в DOCX. Проверьте backend.');
     }
   };
 
@@ -173,8 +105,8 @@ export default function App() {
         {currentPage === 'history' && (
           <HistoryPage reports={reportHistory} onSelectReport={handleSelectReport} onDownloadReport={handleDownloadReport}/>
         )}
-        {currentPage === 'login' && <LoginPage onLogin={handleLogin}/>}
-        {currentPage === 'register' && <RegisterPage onRegister={handleLogin}/>}
+        {currentPage === 'login' && <LoginPage onLogin={handleLogin}/>} 
+        {currentPage === 'register' && <RegisterPage onRegister={handleLogin}/>} 
       </main>
     </div>
   );
